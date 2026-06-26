@@ -354,6 +354,16 @@ async function showJigDetail(id) {
     document.getElementById('detail-shape').innerText = item.pocketShape || 'Straight';
     document.getElementById('detail-notes').innerText = item.notes || 'No technical notes recorded for this jig.';
 
+    // Fix Image Size for Mobile explicitly
+    const detailImg = document.getElementById('detail-guide-img');
+    if (window.innerWidth < 768) {
+        detailImg.style.maxHeight = '220px';
+        detailImg.style.width = 'auto';
+    } else {
+        detailImg.style.maxHeight = '100%';
+        detailImg.style.width = 'auto';
+    }
+
     const modal = document.getElementById('jig-detail-modal');
     if (modal) {
         modal.classList.remove('hidden');
@@ -948,7 +958,7 @@ async function shareData() {
 window.shareData = shareData;
 
 // 14. Action: Update System
-const APP_VERSION = "1.6";
+const APP_VERSION = "1.7";
 async function checkForUpdates() {
     const updateBanner = document.getElementById('update-banner');
     if (!updateBanner) return;
@@ -970,6 +980,18 @@ async function checkForUpdates() {
         console.log("Update check skipped (local environment)");
     }
 }
+
+async function updateApp() {
+    if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let registration of registrations) {
+            await registration.unregister();
+        }
+    }
+    // Hard reload
+    window.location.reload(true);
+}
+window.updateApp = updateApp;
 
 // 15. Initial Boot
 document.addEventListener('DOMContentLoaded', () => {
