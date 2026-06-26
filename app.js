@@ -958,7 +958,8 @@ async function checkForUpdates() {
         // Example: const res = await fetch('https://raw.githubusercontent.com/user/repo/main/version.json');
 
         // FOR NOW: We simulate a check. In production, provide a real URL.
-        const res = await fetch('version.json').catch(e => null);
+        // Add cache-busting timestamp to bypass cache
+        const res = await fetch(`version.json?t=${Date.now()}`).catch(e => null);
         if (res && res.ok) {
             const data = await res.json();
             if (data.version && data.version !== APP_VERSION) {
