@@ -948,7 +948,7 @@ async function shareData() {
 window.shareData = shareData;
 
 // 14. Action: Update System
-const APP_VERSION = "1.5";
+const APP_VERSION = "1.6";
 async function checkForUpdates() {
     const updateBanner = document.getElementById('update-banner');
     if (!updateBanner) return;
