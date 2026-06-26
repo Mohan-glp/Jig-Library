@@ -571,18 +571,20 @@
         <div
             class="relative max-w-5xl w-full bg-white dark:bg-slate-900 rounded-[40px] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row max-h-[90vh]">
             <button onclick="closeJigDetail()"
-                class="absolute top-6 right-6 p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-slate-500 z-20 shadow-lg">
-                <i data-lucide="x" class="w-6 h-6"></i>
+                class="absolute top-4 right-4 p-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-slate-500 z-20 shadow-lg border border-slate-200 dark:border-slate-700">
+                <i data-lucide="x" class="w-5 h-5"></i>
             </button>
 
             <!-- Left: Measurement Image / Guide -->
             <div
-                class="md:w-1/2 p-8 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800">
+                class="md:w-1/2 p-6 md:p-8 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800">
                 <div class="w-full mb-6">
-                    <h3 id="detail-jig-id" class="text-primary font-black tracking-widest text-sm mb-1 uppercase">JIG ID
+                    <h3 id="detail-jig-id"
+                        class="text-primary font-black tracking-widest text-[10px] md:text-sm mb-1 uppercase">JIG ID
                     </h3>
                     <h2 id="detail-style-name"
-                        class="text-3xl font-black text-slate-800 dark:text-white uppercase leading-tight">STYLE NAME
+                        class="text-2xl md:text-3xl font-black text-slate-800 dark:text-white uppercase leading-tight">
+                        STYLE NAME
                     </h2>
                 </div>
                 <div
@@ -596,30 +598,30 @@
             </div>
 
             <!-- Right: Details -->
-            <div class="md:w-1/2 p-8 md:p-12 overflow-y-auto">
-                <div class="grid grid-cols-2 gap-8 mb-10">
+            <div class="md:w-1/2 p-6 md:p-12 overflow-y-auto">
+                <div class="grid grid-cols-2 gap-4 md:gap-8 mb-8 md:mb-10">
                     <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2"
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2"
                             data-i18n="label-rack">Rack Location</p>
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 md:gap-3">
                             <span
-                                class="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center text-amber-500">
-                                <i data-lucide="map-pin" class="w-5 h-5"></i>
+                                class="w-8 h-8 md:w-10 md:h-10 bg-amber-500/10 rounded-lg md:rounded-xl flex items-center justify-center text-amber-500">
+                                <i data-lucide="map-pin" class="w-4 h-4 md:w-5 md:h-5"></i>
                             </span>
                             <span id="detail-rack-location"
-                                class="text-2xl font-black text-amber-600 dark:text-amber-400 uppercase">A-04</span>
+                                class="text-lg md:text-2xl font-black text-amber-600 dark:text-amber-400 uppercase">A-04</span>
                         </div>
                     </div>
                     <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2"
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2"
                             data-i18n="label-quantity">Quantity</p>
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 md:gap-3">
                             <span
-                                class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                                <i data-lucide="layers" class="w-5 h-5"></i>
+                                class="w-8 h-8 md:w-10 md:h-10 bg-primary/10 rounded-lg md:rounded-xl flex items-center justify-center text-primary">
+                                <i data-lucide="layers" class="w-4 h-4 md:w-5 md:h-5"></i>
                             </span>
                             <span id="detail-quantity"
-                                class="text-2xl font-black text-primary dark:text-blue-400">10</span>
+                                class="text-lg md:text-2xl font-black text-primary dark:text-blue-400">10</span>
                         </div>
                     </div>
                 </div>
@@ -627,13 +629,13 @@
                 <div class="space-y-8">
                     <!-- Dimensions Grid -->
                     <div
-                        class="bg-slate-50 dark:bg-slate-800/40 p-6 rounded-3xl border border-slate-100 dark:border-slate-700/50">
+                        class="bg-slate-50 dark:bg-slate-800/40 p-4 md:p-6 rounded-3xl border border-slate-100 dark:border-slate-700/50">
                         <h4
-                            class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                            class="text-[10px] md:text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
                             <i data-lucide="maximize" class="w-4 h-4"></i>
                             Dimensions (mm)
                         </h4>
-                        <div class="grid grid-cols-3 gap-y-6 gap-x-4">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4">
                             <div class="flex flex-col">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase mb-1"
                                     data-i18n="label-width">Width</span>
