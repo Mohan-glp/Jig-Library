@@ -85,7 +85,7 @@
                 <div>
                     <h1 class="text-xl font-black italic tracking-wider text-primary dark:text-blue-400"
                         data-i18n="app-title">JIG LIBRARY</h1>
-                    <p class="text-[10px] uppercase font-bold tracking-widest text-slate-500">Professional Edition v1.5
+                    <p class="text-[10px] uppercase font-bold tracking-widest text-slate-500">Professional Edition v1.8
                     </p>
                 </div>
             </div>
@@ -374,6 +374,20 @@
                                             data-i18n="label-rh2">Right H2</label>
                                         <input type="text" id="pocketRH2" class="input-modern px-3 py-2 text-sm"
                                             placeholder="RH2 (mm)">
+                                    </div>
+                                    <div class="form-group group id-curve-only hidden">
+                                        <label
+                                            class="block text-[10px] font-bold text-slate-400 group-focus-within:text-primary uppercase tracking-widest mb-1 ml-1"
+                                            data-i18n="label-ch1">Curve H1</label>
+                                        <input type="text" id="pocketCH1" class="input-modern px-3 py-2 text-sm"
+                                            placeholder="CH1 (mm)">
+                                    </div>
+                                    <div class="form-group group id-curve-only hidden">
+                                        <label
+                                            class="block text-[10px] font-bold text-slate-400 group-focus-within:text-primary uppercase tracking-widest mb-1 ml-1"
+                                            data-i18n="label-ch2">Curve H2</label>
+                                        <input type="text" id="pocketCH2" class="input-modern px-3 py-2 text-sm"
+                                            placeholder="CH2 (mm)">
                                     </div>
                                     <div class="form-group group col-span-2">
                                         <label
@@ -666,8 +680,11 @@
                                 <span id="detail-rh1"
                                     class="text-lg font-bold text-slate-600 dark:text-slate-400">20</span>
                             </div>
-                            <div class="flex flex-col">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase mb-1">---</span>
+                            <div class="flex flex-col id-detail-curve-only">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase mb-1"
+                                    data-i18n="label-ch1">CH1</span>
+                                <span id="detail-ch1"
+                                    class="text-lg font-bold text-slate-600 dark:text-slate-400">---</span>
                             </div>
                             <div class="flex flex-col">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase mb-1"
@@ -680,6 +697,12 @@
                                     data-i18n="label-rh2">RH2</span>
                                 <span id="detail-rh2"
                                     class="text-lg font-bold text-slate-600 dark:text-slate-400">15</span>
+                            </div>
+                            <div class="flex flex-col id-detail-curve-only">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase mb-1"
+                                    data-i18n="label-ch2">CH2</span>
+                                <span id="detail-ch2"
+                                    class="text-lg font-bold text-slate-600 dark:text-slate-400">---</span>
                             </div>
                         </div>
                     </div>
