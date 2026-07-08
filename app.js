@@ -24,6 +24,8 @@ const translations = {
         'label-rh1': 'Right H1',
         'label-lh2': 'Left H2',
         'label-rh2': 'Right H2',
+        'label-ch1': 'Curve H1',
+        'label-ch2': 'Curve H2',
         'label-rack': 'Rack loc',
         'label-notes': 'Technical Notes',
         'label-quantity': 'Quantity (Total Units)',
@@ -103,6 +105,8 @@ const translations = {
         'label-rh1': 'Alt. Der 1',
         'label-lh2': 'Alt. Izq 2',
         'label-rh2': 'Alt. Der 2',
+        'label-ch1': 'Alt. Curva 1',
+        'label-ch2': 'Alt. Curva 2',
         'label-rack': 'Ubicación en Rack',
         'label-notes': 'Notas Técnicas',
         'label-quantity': 'Cantidad (Unidades Totales)',
@@ -350,9 +354,18 @@ async function showJigDetail(id) {
     document.getElementById('detail-rh1').innerText = (item.pocketRH1 || '---') + ' mm';
     document.getElementById('detail-lh2').innerText = (item.pocketLH2 || '---') + ' mm';
     document.getElementById('detail-rh2').innerText = (item.pocketRH2 || '---') + ' mm';
+    document.getElementById('detail-ch1').innerText = (item.pocketCH1 || '---') + ' mm';
+    document.getElementById('detail-ch2').innerText = (item.pocketCH2 || '---') + ' mm';
     document.getElementById('detail-symmetry').innerText = item.symmetry || 'Symmetrical';
     document.getElementById('detail-shape').innerText = item.pocketShape || 'Straight';
     document.getElementById('detail-notes').innerText = item.notes || 'No technical notes recorded for this jig.';
+
+    const detailCurveOnly = document.querySelectorAll('.id-detail-curve-only');
+    if (item.pocketShape === 'Curve') {
+        detailCurveOnly.forEach(el => el.classList.remove('invisible'));
+    } else {
+        detailCurveOnly.forEach(el => el.classList.add('invisible'));
+    }
 
     // Fix Image Size for Mobile explicitly
     const detailImg = document.getElementById('detail-guide-img');
@@ -606,9 +619,9 @@ async function refreshLibrary(filter = "") {
                                 <span class="text-[8px] font-bold text-slate-400 uppercase">${langData['label-rh1']}</span>
                                 <span class="text-xs font-medium text-slate-600 dark:text-slate-400">${j.pocketRH1 ? j.pocketRH1 + ' mm' : '---'}</span>
                             </div>
-                            <div class="flex flex-col">
-                                <span class="text-[8px] font-bold text-slate-400 uppercase">...</span>
-                                <span class="text-xs font-medium text-slate-600 dark:text-slate-400"></span>
+                            <div class="flex flex-col id-card-curve-only ${j.pocketShape === 'Curve' ? '' : 'invisible'}">
+                                <span class="text-[8px] font-bold text-slate-400 uppercase">${langData['label-ch1']}</span>
+                                <span class="text-xs font-medium text-slate-600 dark:text-slate-400">${j.pocketCH1 ? j.pocketCH1 + ' mm' : '---'}</span>
                             </div>
                             <div class="flex flex-col">
                                 <span class="text-[8px] font-bold text-slate-400 uppercase">${langData['label-lh2']}</span>
@@ -617,6 +630,10 @@ async function refreshLibrary(filter = "") {
                             <div class="flex flex-col">
                                 <span class="text-[8px] font-bold text-slate-400 uppercase">${langData['label-rh2']}</span>
                                 <span class="text-xs font-medium text-slate-600 dark:text-slate-400">${j.pocketRH2 ? j.pocketRH2 + ' mm' : '---'}</span>
+                            </div>
+                            <div class="flex flex-col id-card-curve-only ${j.pocketShape === 'Curve' ? '' : 'invisible'}">
+                                <span class="text-[8px] font-bold text-slate-400 uppercase">${langData['label-ch2']}</span>
+                                <span class="text-xs font-medium text-slate-600 dark:text-slate-400">${j.pocketCH2 ? j.pocketCH2 + ' mm' : '---'}</span>
                             </div>
                         </div>
 
@@ -710,6 +727,8 @@ form.addEventListener('submit', async (e) => {
         pocketRH1: document.getElementById('pocketRH1').value.trim(),
         pocketLH2: document.getElementById('pocketLH2').value.trim(),
         pocketRH2: document.getElementById('pocketRH2').value.trim(),
+        pocketCH1: document.getElementById('pocketCH1').value.trim(),
+        pocketCH2: document.getElementById('pocketCH2').value.trim(),
         rackLocation: document.getElementById('rackLocation').value.trim(),
         symmetry: document.querySelector('input[name="symmetry"]:checked')?.value || 'Symmetrical',
         pocketShape: document.querySelector('input[name="pocketShape"]:checked')?.value || 'Straight',
@@ -806,6 +825,8 @@ window.editRecord = async (id) => {
     document.getElementById('pocketRH1').value = item.pocketRH1 || '';
     document.getElementById('pocketLH2').value = item.pocketLH2 || '';
     document.getElementById('pocketRH2').value = item.pocketRH2 || '';
+    document.getElementById('pocketCH1').value = item.pocketCH1 || '';
+    document.getElementById('pocketCH2').value = item.pocketCH2 || '';
     document.getElementById('rackLocation').value = item.rackLocation || '';
     document.getElementById('quantity').value = item.quantity || 1;
     document.getElementById('notes').value = item.notes || '';
@@ -816,6 +837,7 @@ window.editRecord = async (id) => {
 
     const shapeRadio = document.querySelector(`input[name="pocketShape"][value="${item.pocketShape || 'Straight'}"]`);
     if (shapeRadio) shapeRadio.checked = true;
+    toggleFormCurveFields();
 
     // Update UI for Edit Mode
     if (cancelEditBtn) cancelEditBtn.classList.remove('hidden');
@@ -830,6 +852,7 @@ window.editRecord = async (id) => {
 function cancelEdit() {
     editingId = null;
     form.reset();
+    toggleFormCurveFields();
     if (cancelEditBtn) cancelEditBtn.classList.add('hidden');
     if (submitBtnText) submitBtnText.setAttribute('data-i18n', 'btn-save');
     if (regTitle) regTitle.setAttribute('data-i18n', 'reg-title');
@@ -958,7 +981,7 @@ async function shareData() {
 window.shareData = shareData;
 
 // 14. Action: Update System
-const APP_VERSION = "1.7";
+const APP_VERSION = "1.8";
 async function checkForUpdates() {
     const updateBanner = document.getElementById('update-banner');
     if (!updateBanner) return;
@@ -993,6 +1016,20 @@ async function updateApp() {
 }
 window.updateApp = updateApp;
 
+function toggleFormCurveFields() {
+    const selectedShape = document.querySelector('input[name="pocketShape"]:checked')?.value;
+    const curveOnlyFields = document.querySelectorAll('.id-curve-only');
+    if (selectedShape === 'Curve') {
+        curveOnlyFields.forEach(el => el.classList.remove('hidden'));
+    } else {
+        curveOnlyFields.forEach(el => el.classList.add('hidden'));
+        const pocketCH1 = document.getElementById('pocketCH1');
+        const pocketCH2 = document.getElementById('pocketCH2');
+        if (pocketCH1) pocketCH1.value = '';
+        if (pocketCH2) pocketCH2.value = '';
+    }
+}
+
 // 15. Initial Boot
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
@@ -1004,6 +1041,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sortSelect) {
         sortSelect.value = 'id';
     }
+
+    // Attach listener for Bottom Shape radio buttons
+    document.querySelectorAll('input[name="pocketShape"]').forEach(radio => {
+        radio.addEventListener('change', toggleFormCurveFields);
+    });
+    toggleFormCurveFields(); // Run once initially to set the right state
 
     refreshLibrary();
     updateRecentEntries();
