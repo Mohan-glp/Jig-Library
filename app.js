@@ -83,6 +83,26 @@ const translations = {
         'btn-share': 'Share Data',
         'update-message': 'A new version of Jig Library is available!',
         'btn-update-now': 'Update Now',
+        'count-jig-singular': 'Jig',
+        'count-jig-plural': 'Jigs',
+        'count-unit-singular': 'Unit',
+        'count-unit-plural': 'Total Units',
+        'btn-clean-duplicates': 'Clean Duplicates',
+        'toast-clean-success': 'Duplicate items cleaned successfully!',
+        'toast-no-duplicates': 'No duplicate items found.',
+        'confirm-clean-duplicates': 'Found {count} duplicate items. Do you want to remove duplicates and keep the latest records?',
+        'toast-import-stats': 'Restored: {added} new, {updated} updated.',
+        'prompt-duplicate-jig': 'A jig with ID "{id}" already exists ({style}). Do you want to update it instead of creating a duplicate?',
+        'duplicate-banner-msg': 'Duplicate jigs detected in library!',
+        'btn-clean-now': 'Clean Duplicates Now',
+        'btn-measure-search': 'Dimensions',
+        'measure-panel-title': 'Technical Measurement Search',
+        'measure-panel-desc': 'Search jigs by target dimensions with tolerance and match conditions',
+        'measure-mode-all': 'Match All (AND)',
+        'measure-mode-any': 'Match Any (OR)',
+        'measure-tolerance-label': 'Tolerance:',
+        'btn-clear-measure': 'Clear',
+        'toast-clear-measure': 'Dimension filters cleared',
     },
     es: {
         'app-title': 'BIBLIOTECA DE JIGS',
@@ -161,6 +181,26 @@ const translations = {
         'btn-share': 'Compartir Datos',
         'update-message': '¡Una nueva versión de Jig Library está disponible!',
         'btn-update-now': 'Actualizar Ahora',
+        'count-jig-singular': 'Jig',
+        'count-jig-plural': 'Jigs',
+        'count-unit-singular': 'Unidad',
+        'count-unit-plural': 'Unidades Totales',
+        'btn-clean-duplicates': 'Limpiar Duplicados',
+        'toast-clean-success': '¡Elementos duplicados eliminados con éxito!',
+        'toast-no-duplicates': 'No se encontraron elementos duplicados.',
+        'confirm-clean-duplicates': 'Se encontraron {count} elementos duplicados. ¿Desea eliminar los duplicados y conservar los registros más recientes?',
+        'toast-import-stats': 'Restaurado: {added} nuevos, {updated} actualizados.',
+        'prompt-duplicate-jig': 'Ya existe un jig con ID "{id}" ({style}). ¿Desea actualizarlo en lugar de crear un duplicado?',
+        'duplicate-banner-msg': '¡Se detectaron jigs duplicados en la biblioteca!',
+        'btn-clean-now': 'Limpiar Duplicados Ahora',
+        'btn-measure-search': 'Medidas',
+        'measure-panel-title': 'Búsqueda Técnica por Medidas',
+        'measure-panel-desc': 'Buscar jigs por dimensiones con tolerancia y condiciones de coincidencia',
+        'measure-mode-all': 'Coincidir Todas (AND)',
+        'measure-mode-any': 'Coincidir Alguna (OR)',
+        'measure-tolerance-label': 'Tolerancia:',
+        'btn-clear-measure': 'Limpiar',
+        'toast-clear-measure': 'Filtros de dimensiones eliminados',
     }
 };
 
@@ -249,6 +289,8 @@ const form = document.getElementById('jig-form');
 const list = document.getElementById('jig-list');
 const searchInput = document.getElementById('searchJig');
 const countBadge = document.getElementById('count');
+const countJigsLabel = document.getElementById('count-jigs-label');
+const countUnitsLabel = document.getElementById('count-units-label');
 const sortSelect = document.getElementById('sortLibrary');
 const themeToggle = document.getElementById('theme-toggle');
 const langToggle = document.getElementById('lang-toggle');
@@ -499,6 +541,128 @@ document.getElementById('login-toggle').addEventListener('click', () => {
     }
 });
 
+// 6.5. Measurement Filter Helper Logic
+const measurementFields = [
+    { id: 'm-search-width', key: 'pocketWidth', label: 'W' },
+    { id: 'm-search-height', key: 'pocketHeight', label: 'H' },
+    { id: 'm-search-lh1', key: 'pocketLH1', label: 'LH1' },
+    { id: 'm-search-rh1', key: 'pocketRH1', label: 'RH1' },
+    { id: 'm-search-lh2', key: 'pocketLH2', label: 'LH2' },
+    { id: 'm-search-rh2', key: 'pocketRH2', label: 'RH2' },
+    { id: 'm-search-ch1', key: 'pocketCH1', label: 'CH1' },
+    { id: 'm-search-ch2', key: 'pocketCH2', label: 'CH2' }
+];
+
+function getMeasurementCriteria() {
+    const activeCriteria = [];
+    measurementFields.forEach(f => {
+        const input = document.getElementById(f.id);
+        if (input && input.value.trim() !== '') {
+            const val = parseFloat(input.value.trim());
+            if (!isNaN(val)) {
+                activeCriteria.push({ key: f.key, target: val, label: f.label });
+            }
+        }
+    });
+
+    const toleranceInput = document.getElementById('m-search-tolerance');
+    let tolerance = parseFloat(toleranceInput?.value);
+    if (isNaN(tolerance) || tolerance < 0) tolerance = 0;
+
+    const matchMode = document.querySelector('input[name="m-match-mode"]:checked')?.value || 'all';
+
+    return { activeCriteria, tolerance, matchMode };
+}
+
+function matchesMeasurements(jig, { activeCriteria, tolerance, matchMode }) {
+    if (activeCriteria.length === 0) return true;
+
+    if (matchMode === 'all') {
+        return activeCriteria.every(criterion => {
+            const jigValStr = jig[criterion.key];
+            if (!jigValStr) return false;
+            const jigVal = parseFloat(String(jigValStr).replace(/[^0-9.]/g, ''));
+            if (isNaN(jigVal)) return false;
+            return Math.abs(jigVal - criterion.target) <= tolerance + 0.0001;
+        });
+    } else {
+        return activeCriteria.some(criterion => {
+            const jigValStr = jig[criterion.key];
+            if (!jigValStr) return false;
+            const jigVal = parseFloat(String(jigValStr).replace(/[^0-9.]/g, ''));
+            if (isNaN(jigVal)) return false;
+            return Math.abs(jigVal - criterion.target) <= tolerance + 0.0001;
+        });
+    }
+}
+
+function updateMeasurementFilterSummary({ activeCriteria, tolerance, matchMode }) {
+    const badge = document.getElementById('active-measure-badge');
+    const summaryBox = document.getElementById('m-filter-summary');
+    const summaryText = document.getElementById('m-filter-summary-text');
+    const toggleBtn = document.getElementById('btn-toggle-measure');
+
+    if (activeCriteria.length > 0) {
+        if (badge) {
+            badge.innerText = activeCriteria.length;
+            badge.classList.remove('hidden');
+        }
+        if (toggleBtn) {
+            toggleBtn.classList.add('border-primary', 'bg-primary/5', 'text-primary');
+        }
+        if (summaryBox && summaryText) {
+            const modeText = matchMode === 'all' ? 'All (AND)' : 'Any (OR)';
+            const filterParts = activeCriteria.map(c => `${c.label}: ${c.target}±${tolerance}mm`).join(', ');
+            summaryText.innerText = `${filterParts} [${modeText}]`;
+            summaryBox.classList.remove('hidden');
+        }
+    } else {
+        if (badge) badge.classList.add('hidden');
+        if (toggleBtn) {
+            toggleBtn.classList.remove('border-primary', 'bg-primary/5', 'text-primary');
+        }
+        if (summaryBox) summaryBox.classList.add('hidden');
+    }
+}
+
+function toggleMeasurementPanel() {
+    const panel = document.getElementById('measurement-search-panel');
+    if (!panel) return;
+    const isHidden = panel.classList.contains('hidden');
+    if (isHidden) {
+        panel.classList.remove('hidden');
+        const firstInput = document.getElementById('m-search-width');
+        firstInput?.focus();
+    } else {
+        panel.classList.add('hidden');
+    }
+}
+window.toggleMeasurementPanel = toggleMeasurementPanel;
+
+function setTolerance(val) {
+    const toleranceInput = document.getElementById('m-search-tolerance');
+    if (toleranceInput) {
+        toleranceInput.value = val;
+        refreshLibrary(searchInput?.value || '');
+    }
+}
+window.setTolerance = setTolerance;
+
+function clearMeasurementSearch() {
+    measurementFields.forEach(f => {
+        const input = document.getElementById(f.id);
+        if (input) input.value = '';
+    });
+    const toleranceInput = document.getElementById('m-search-tolerance');
+    if (toleranceInput) toleranceInput.value = '1';
+    const allRadio = document.querySelector('input[name="m-match-mode"][value="all"]');
+    if (allRadio) allRadio.checked = true;
+
+    showToast(translations[currentLang]['toast-clear-measure'] || 'Dimension filters cleared', 'info');
+    refreshLibrary(searchInput?.value || '');
+}
+window.clearMeasurementSearch = clearMeasurementSearch;
+
 // 7. Core Logic: Load and Display Jigs
 async function refreshLibrary(filter = "") {
     list.style.opacity = '0.5';
@@ -536,7 +700,25 @@ async function refreshLibrary(filter = "") {
             );
         }
 
-        countBadge.innerText = jigs.length;
+        // Apply Technical Measurement Search & Tolerance Filter
+        const mCriteria = getMeasurementCriteria();
+        if (mCriteria.activeCriteria.length > 0) {
+            jigs = jigs.filter(j => matchesMeasurements(j, mCriteria));
+        }
+        updateMeasurementFilterSummary(mCriteria);
+
+        // Accurate Inventory Counts: Both Jig Models & Total Stock Units
+        const jigCount = jigs.length;
+        const totalUnits = jigs.reduce((sum, j) => sum + Math.max(1, parseInt(j.quantity, 10) || 1), 0);
+        const jigLabel = jigCount === 1 ? (langData['count-jig-singular'] || 'Jig') : (langData['count-jig-plural'] || 'Jigs');
+        const unitLabel = totalUnits === 1 ? (langData['count-unit-singular'] || 'Unit') : (langData['count-unit-plural'] || 'Total Units');
+
+        if (countJigsLabel && countUnitsLabel) {
+            countJigsLabel.innerText = `${jigCount} ${jigLabel}`;
+            countUnitsLabel.innerText = `${totalUnits} ${unitLabel}`;
+        } else if (countBadge) {
+            countBadge.innerText = `${jigCount} ${jigLabel} • ${totalUnits} ${unitLabel}`;
+        }
         list.innerHTML = '';
 
         if (jigs.length === 0) {
@@ -569,7 +751,7 @@ async function refreshLibrary(filter = "") {
                 <div>
                     <div class="flex justify-between items-start mb-5">
                         <span class="bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-400 text-[10px] font-black px-2.5 py-1.5 rounded-lg uppercase tracking-wider border border-primary/20 dark:border-primary/40">${j.jigId}</span>
-                        <div class="flex space-x-1 ${isAdmin ? 'opacity-0 group-hover:opacity-100' : 'hidden'} transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+                        <div class="flex space-x-1 ${isAdmin ? 'opacity-100 md:opacity-0 md:group-hover:opacity-100' : 'hidden'} transition-all duration-300 transform translate-x-0 md:translate-x-2 md:group-hover:translate-x-0">
                             <button onclick="editRecord(${j.id})" class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-all" title="Edit">
                                 <i data-lucide="edit-3" class="w-4 h-4"></i>
                             </button>
@@ -732,7 +914,7 @@ form.addEventListener('submit', async (e) => {
         rackLocation: document.getElementById('rackLocation').value.trim(),
         symmetry: document.querySelector('input[name="symmetry"]:checked')?.value || 'Symmetrical',
         pocketShape: document.querySelector('input[name="pocketShape"]:checked')?.value || 'Straight',
-        quantity: parseInt(document.getElementById('quantity').value) || 1,
+        quantity: Math.max(1, parseInt(document.getElementById('quantity').value, 10) || 1),
         notes: document.getElementById('notes').value.trim()
     };
 
@@ -742,9 +924,31 @@ form.addEventListener('submit', async (e) => {
             showToast(langData['toast-update-success']);
             cancelEdit();
         } else {
+            // Check if jig with the same jigId already exists to prevent duplicate entries
+            const existing = await db.jigs.filter(j => j.jigId && j.jigId.trim().toLowerCase() === data.jigId.toLowerCase()).first();
+            if (existing) {
+                const promptMsg = (langData['prompt-duplicate-jig'] || 'A jig with ID "{id}" already exists ({style}). Do you want to update it instead of creating a duplicate?')
+                    .replace('{id}', data.jigId)
+                    .replace('{style}', existing.styleName);
+                if (confirm(promptMsg)) {
+                    await db.jigs.update(existing.id, data);
+                    form.reset();
+                    document.getElementById('quantity').value = '1';
+                    showToast(langData['toast-update-success']);
+                    refreshLibrary();
+                    updateRecentEntries();
+                    suggestNextJigId();
+                    checkForExistingDuplicates();
+                    return;
+                } else {
+                    return;
+                }
+            }
+
             data.dateAdded = new Date();
             await db.jigs.add(data);
             form.reset();
+            document.getElementById('quantity').value = '1';
             showToast(langData['toast-save-success']);
         }
 
@@ -852,11 +1056,14 @@ window.editRecord = async (id) => {
 function cancelEdit() {
     editingId = null;
     form.reset();
+    const qtyInput = document.getElementById('quantity');
+    if (qtyInput) qtyInput.value = '1';
     toggleFormCurveFields();
     if (cancelEditBtn) cancelEditBtn.classList.add('hidden');
     if (submitBtnText) submitBtnText.setAttribute('data-i18n', 'btn-save');
     if (regTitle) regTitle.setAttribute('data-i18n', 'reg-title');
     updateUI();
+    suggestNextJigId();
 }
 
 window.cancelEdit = cancelEdit;
@@ -918,23 +1125,56 @@ importFileInput?.addEventListener('change', async (e) => {
     const reader = new FileReader();
     reader.onload = async (event) => {
         try {
-            const jigs = JSON.parse(event.target.result);
-            if (!Array.isArray(jigs)) throw new Error("Invalid Format");
+            const importedJigs = JSON.parse(event.target.result);
+            if (!Array.isArray(importedJigs)) throw new Error("Invalid Format");
 
-            // Basic validation and formatting check if needed
-            for (const item of jigs) {
-                // Ensure dates are parsed correctly if stored as strings
+            // Smart Merge/Upsert: Prevent duplicate records by matching jigId
+            const existingJigs = await db.jigs.toArray();
+            const existingMap = new Map();
+            existingJigs.forEach(j => {
+                if (j.jigId) {
+                    existingMap.set(j.jigId.trim().toLowerCase(), j);
+                }
+            });
+
+            let addedCount = 0;
+            let updatedCount = 0;
+
+            for (const item of importedJigs) {
+                if (!item.jigId) continue;
+                const key = item.jigId.trim().toLowerCase();
                 if (item.dateAdded) item.dateAdded = new Date(item.dateAdded);
+                if (item.quantity !== undefined) {
+                    item.quantity = Math.max(1, parseInt(item.quantity, 10) || 1);
+                }
 
-                // Add or update (merge by jigId or just add everything)
-                // For safety, we just add everything as new entries or we can clear and replace
-                // Let's just add them
-                delete item.id; // Let Dexie generate new IDs
-                await db.jigs.add(item);
+                if (existingMap.has(key)) {
+                    const existing = existingMap.get(key);
+                    const updated = {
+                        ...existing,
+                        ...item,
+                        id: existing.id // Keep local Dexie primary key to update record in-place
+                    };
+                    await db.jigs.put(updated);
+                    existingMap.set(key, updated);
+                    updatedCount++;
+                } else {
+                    delete item.id; // Let Dexie generate a new unique primary key
+                    const newId = await db.jigs.add(item);
+                    item.id = newId;
+                    existingMap.set(key, item);
+                    addedCount++;
+                }
             }
 
-            showToast(translations[currentLang]['toast-import-success']);
-            refreshLibrary();
+            const statsMsg = (translations[currentLang]['toast-import-stats'] || 'Restored: {added} new, {updated} updated.')
+                .replace('{added}', addedCount)
+                .replace('{updated}', updatedCount);
+            showToast(statsMsg);
+            refreshLibrary(searchInput?.value || '');
+            updateRecentEntries();
+            suggestNextJigId();
+            checkForExistingDuplicates();
         } catch (err) {
             console.error(err);
             showToast(translations[currentLang]['toast-import-error'], "error");
@@ -946,6 +1186,103 @@ importFileInput?.addEventListener('change', async (e) => {
 });
 
 window.exportData = exportData;
+
+// Cleanup Duplicates action (for repairing libraries that already had duplicates)
+async function cleanupDuplicates(silent = false) {
+    try {
+        const allJigs = await db.jigs.toArray();
+        if (allJigs.length === 0) {
+            if (!silent) showToast(translations[currentLang]['toast-no-duplicates'], 'info');
+            return 0;
+        }
+
+        const groups = new Map();
+        for (const j of allJigs) {
+            const key = (j.jigId || '').trim().toLowerCase();
+            if (!key) continue;
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(j);
+        }
+
+        const idsToDelete = [];
+        let duplicateCount = 0;
+
+        for (const [key, list] of groups.entries()) {
+            if (list.length > 1) {
+                // Keep the most recent or highest id
+                list.sort((a, b) => {
+                    const dateA = new Date(a.dateAdded || 0).getTime();
+                    const dateB = new Date(b.dateAdded || 0).getTime();
+                    if (dateB !== dateA) return dateB - dateA;
+                    return (b.id || 0) - (a.id || 0);
+                });
+
+                for (let i = 1; i < list.length; i++) {
+                    idsToDelete.push(list[i].id);
+                    duplicateCount++;
+                }
+            }
+        }
+
+        if (duplicateCount === 0) {
+            const duplicateBanner = document.getElementById('duplicate-banner');
+            if (duplicateBanner) duplicateBanner.classList.add('hidden');
+            if (!silent) showToast(translations[currentLang]['toast-no-duplicates'], 'info');
+            return 0;
+        }
+
+        if (!silent) {
+            const msg = (translations[currentLang]['confirm-clean-duplicates'] || 'Found {count} duplicate items. Do you want to remove duplicates and keep the latest records?')
+                .replace('{count}', duplicateCount);
+            if (!confirm(msg)) return 0;
+        }
+
+        for (const id of idsToDelete) {
+            await db.jigs.delete(id);
+        }
+
+        const duplicateBanner = document.getElementById('duplicate-banner');
+        if (duplicateBanner) duplicateBanner.classList.add('hidden');
+
+        refreshLibrary(searchInput?.value || '');
+        updateRecentEntries();
+        suggestNextJigId();
+
+        showToast((translations[currentLang]['toast-clean-success'] || 'Duplicate items cleaned successfully!') + ` (${duplicateCount} removed)`);
+        return duplicateCount;
+    } catch (err) {
+        console.error("Cleanup duplicates error:", err);
+        showToast("Error cleaning duplicates: " + err, "error");
+        return 0;
+    }
+}
+window.cleanupDuplicates = cleanupDuplicates;
+
+async function checkForExistingDuplicates() {
+    try {
+        const allJigs = await db.jigs.toArray();
+        const seen = new Set();
+        let dupsFound = 0;
+        for (const j of allJigs) {
+            const key = (j.jigId || '').trim().toLowerCase();
+            if (key) {
+                if (seen.has(key)) dupsFound++;
+                else seen.add(key);
+            }
+        }
+        const duplicateBanner = document.getElementById('duplicate-banner');
+        if (duplicateBanner) {
+            if (dupsFound > 0) {
+                duplicateBanner.classList.remove('hidden');
+            } else {
+                duplicateBanner.classList.add('hidden');
+            }
+        }
+    } catch (e) {
+        console.error("Duplicate check error:", e);
+    }
+}
+window.checkForExistingDuplicates = checkForExistingDuplicates;
 
 // 13. Action: Share Data (Mobile)
 async function shareData() {
@@ -981,7 +1318,7 @@ async function shareData() {
 window.shareData = shareData;
 
 // 14. Action: Update System
-const APP_VERSION = "1.8";
+const APP_VERSION = "2.0";
 async function checkForUpdates() {
     const updateBanner = document.getElementById('update-banner');
     if (!updateBanner) return;
@@ -1048,9 +1385,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     toggleFormCurveFields(); // Run once initially to set the right state
 
+    // Attach real-time listeners for Measurement Search inputs & tolerance
+    document.querySelectorAll('.m-dimension-input').forEach(input => {
+        input.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                refreshLibrary(searchInput?.value || '');
+            }, 200);
+        });
+    });
+
+    document.getElementById('m-search-tolerance')?.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            refreshLibrary(searchInput?.value || '');
+        }, 200);
+    });
+
     refreshLibrary();
     updateRecentEntries();
     suggestNextJigId();
+    checkForExistingDuplicates();
     lucide.createIcons();
 
     setTimeout(() => {

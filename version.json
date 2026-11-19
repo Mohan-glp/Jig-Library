@@ -1,5 +1,5 @@
 {
-    "version": "1.8",
-    "release_date": "2026-07-06",
-    "notes": "Curve Heights (CH1 and CH2) added for Bottom Curve Shape."
+    "version": "2.0",
+    "release_date": "2026-11-19",
+    "notes": "Added Technical Measurement Search with tolerance (± mm), Match All (AND) / Match Any (OR) modes, and real-time dimension filtering."
 }
