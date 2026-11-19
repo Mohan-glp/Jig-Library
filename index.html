@@ -50,7 +50,7 @@
     <link rel="apple-touch-icon" href="jig_library_icon.png">
 
     <!-- Custom Style -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=2.0">
 </head>
 
 <body class="bg-slate-50 dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
@@ -63,6 +63,17 @@
             class="bg-white text-primary px-3 py-1 rounded-full hover:bg-opacity-90 transition-all font-bold"
             data-i18n="btn-update-now">Update Now</button>
         <button onclick="document.getElementById('update-banner').classList.add('hidden')"
+            class="opacity-70 hover:opacity-100 p-1">✕</button>
+    </div>
+
+    <!-- Duplicate Notification Banner -->
+    <div id="duplicate-banner"
+        class="hidden sticky top-0 z-[59] bg-amber-500 text-white p-2 text-center text-xs font-bold tracking-wide flex items-center justify-center gap-4 shadow-md">
+        <span id="duplicate-banner-msg" data-i18n="duplicate-banner-msg">Duplicate jigs detected in library!</span>
+        <button onclick="cleanupDuplicates()"
+            class="bg-white text-amber-800 px-3 py-1 rounded-full hover:bg-opacity-90 transition-all font-bold text-xs shadow-sm"
+            data-i18n="btn-clean-now">Clean Duplicates Now</button>
+        <button onclick="document.getElementById('duplicate-banner').classList.add('hidden')"
             class="opacity-70 hover:opacity-100 p-1">✕</button>
     </div>
 
@@ -85,7 +96,7 @@
                 <div>
                     <h1 class="text-xl font-black italic tracking-wider text-primary dark:text-blue-400"
                         data-i18n="app-title">JIG LIBRARY</h1>
-                    <p class="text-[10px] uppercase font-bold tracking-widest text-slate-500">Professional Edition v1.8
+                    <p class="text-[10px] uppercase font-bold tracking-widest text-slate-500">Professional Edition v2.0
                     </p>
                 </div>
             </div>
@@ -123,6 +134,12 @@
                         <i data-lucide="upload" class="w-4 h-4"></i>
                     </button>
                     <input type="file" id="import-file" class="hidden" accept=".json">
+                    <div class="w-px h-4 bg-slate-200 dark:bg-slate-700"></div>
+                    <button onclick="cleanupDuplicates()"
+                        class="p-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-amber-500 dark:hover:text-amber-400 transition-all active:scale-95"
+                        title="Clean Duplicate Jigs" data-i18n-title="btn-clean-duplicates">
+                        <i data-lucide="copy-slash" class="w-4 h-4"></i>
+                    </button>
                 </div>
 
                 <button id="theme-toggle"
@@ -168,10 +185,22 @@
                     class="relative z-20 flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6 backdrop-blur-sm bg-white/40 dark:bg-slate-900/40 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:bg-white/60 dark:hover:bg-slate-900/60">
                     <div class="flex items-center gap-6">
                         <div>
-                            <h2 class="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-4">
+                            <h2 class="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-3 flex-wrap">
                                 <span data-i18n="inventory-title">Inventory Library</span>
-                                <span id="count"
-                                    class="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 px-3 py-0.5 rounded-full text-sm font-bold border border-blue-200 dark:border-blue-800 shadow-inner">0</span>
+                                <div class="flex items-center gap-2">
+                                    <span id="count"
+                                        class="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-bold border border-blue-200 dark:border-blue-800 shadow-inner flex items-center gap-1.5"
+                                        title="Registered Jig Styles">
+                                        <i data-lucide="folder" class="w-3.5 h-3.5"></i>
+                                        <span id="count-jigs-label">0 Jigs</span>
+                                    </span>
+                                    <span id="total-units-badge"
+                                        class="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200 dark:border-emerald-800 shadow-inner flex items-center gap-1.5"
+                                        title="Total Units in Inventory">
+                                        <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                                        <span id="count-units-label">0 Total Units</span>
+                                    </span>
+                                </div>
                             </h2>
                             <p class="text-sm text-slate-500 font-medium mt-1" data-i18n="inventory-subtitle">Manage and
                                 search your registered manufacturing jigs</p>
@@ -198,37 +227,168 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                        <!-- Sort Dropdown -->
-                        <div class="relative w-full sm:w-44 group">
-                            <select id="sortLibrary"
-                                class="w-full p-4 pl-10 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hide-scrollbar outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none text-xs font-bold text-slate-600 dark:text-slate-400 cursor-pointer">
-                                <option value="id" data-i18n="opt-sort-id">Jig Number</option>
-                                <option value="new" data-i18n="opt-sort-new">Newest First</option>
-                                <option value="old" data-i18n="opt-sort-old">Oldest First</option>
-                            </select>
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                                <i data-lucide="filter" class="w-4 h-4"></i>
-                            </span>
-                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                                <i data-lucide="chevron-down" class="w-3 h-3"></i>
-                            </span>
-                        </div>
-
-                        <!-- Search Input -->
-                        <div class="relative w-full md:w-80 group">
+                    <div class="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                        <!-- Search Input (Top on mobile, full width) -->
+                        <div class="relative w-full md:w-80 group order-1 md:order-2">
                             <span
                                 class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors cursor-default"><i
                                     data-lucide="search" class="w-5 h-5"></i></span>
                             <input type="text" id="searchJig" placeholder="Search by style, ID or location..."
                                 data-i18n-placeholder="search-placeholder"
-                                class="w-full p-4 pl-12 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all dark:placeholder-slate-500">
+                                class="w-full p-3.5 sm:p-4 pl-12 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all dark:placeholder-slate-500 text-sm">
                             <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-1">
                                 <span
                                     class="hidden sm:block text-[10px] font-bold text-slate-400 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded bg-slate-50 dark:bg-slate-900">Ctrl</span>
                                 <span
                                     class="hidden sm:block text-[10px] font-bold text-slate-400 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded bg-slate-50 dark:bg-slate-900">F</span>
                             </div>
+                        </div>
+
+                        <!-- Sort & Dimensions (Side-by-side on mobile) -->
+                        <div class="grid grid-cols-2 gap-2 w-full md:w-auto order-2 md:order-1">
+                            <!-- Sort Dropdown -->
+                            <div class="relative w-full md:w-44 group">
+                                <select id="sortLibrary"
+                                    class="w-full p-3.5 sm:p-4 pl-10 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm hide-scrollbar outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none text-xs font-bold text-slate-600 dark:text-slate-400 cursor-pointer">
+                                    <option value="id" data-i18n="opt-sort-id">Jig Number</option>
+                                    <option value="new" data-i18n="opt-sort-new">Newest First</option>
+                                    <option value="old" data-i18n="opt-sort-old">Oldest First</option>
+                                </select>
+                                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                    <i data-lucide="filter" class="w-4 h-4"></i>
+                                </span>
+                                <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                    <i data-lucide="chevron-down" class="w-3 h-3"></i>
+                                </span>
+                            </div>
+
+                            <!-- Measurement Filter Toggle Button -->
+                            <button id="btn-toggle-measure" type="button" onclick="toggleMeasurementPanel()"
+                                class="w-full md:w-auto p-3.5 sm:p-4 px-3 sm:px-4 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-blue-400 hover:border-primary/50 transition-all flex items-center justify-center gap-2 font-bold text-xs shrink-0 cursor-pointer group active:scale-95"
+                                title="Filter by Dimensions & Tolerance" data-i18n-title="btn-measure-search">
+                                <i data-lucide="ruler" class="w-4 h-4 text-primary group-hover:scale-110 transition-transform"></i>
+                                <span data-i18n="btn-measure-search">Dimensions</span>
+                                <span id="active-measure-badge"
+                                    class="hidden bg-primary text-white text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-sm">0</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Measurement Search Panel (Collapsible) -->
+                <div id="measurement-search-panel"
+                    class="hidden mb-8 p-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-3xl border border-slate-200 dark:border-slate-800 shadow-lg transition-all duration-300">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between pb-4 mb-4 border-b border-slate-200/80 dark:border-slate-800 gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-primary/10 rounded-2xl text-primary">
+                                <i data-lucide="ruler-combined" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                                    <span data-i18n="measure-panel-title">Technical Measurement Search</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-md">mm</span>
+                                </h3>
+                                <p class="text-xs text-slate-400 font-medium" data-i18n="measure-panel-desc">
+                                    Search jigs by target dimensions with tolerance and match conditions
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Match Mode & Tolerance Controls -->
+                        <div class="flex flex-wrap items-center gap-4">
+                            <!-- Match Mode Toggle -->
+                            <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="m-match-mode" value="all" checked onchange="refreshLibrary(searchInput.value)" class="sr-only peer">
+                                    <span class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 peer-checked:bg-white dark:peer-checked:bg-slate-700 peer-checked:text-primary dark:peer-checked:text-blue-400 peer-checked:shadow-sm transition-all flex items-center gap-1.5">
+                                        <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                                        <span data-i18n="measure-mode-all">Match All (AND)</span>
+                                    </span>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="m-match-mode" value="any" onchange="refreshLibrary(searchInput.value)" class="sr-only peer">
+                                    <span class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 peer-checked:bg-white dark:peer-checked:bg-slate-700 peer-checked:text-primary dark:peer-checked:text-blue-400 peer-checked:shadow-sm transition-all flex items-center gap-1.5">
+                                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                        <span data-i18n="measure-mode-any">Match Any (OR)</span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Tolerance Control -->
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider" data-i18n="measure-tolerance-label">Tolerance:</span>
+                                <div class="relative flex items-center">
+                                    <span class="text-xs font-black text-primary dark:text-blue-400 mr-1">±</span>
+                                    <input type="number" id="m-search-tolerance" value="1" min="0" max="50" step="0.5" inputmode="decimal"
+                                        class="w-16 p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-center text-xs font-extrabold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary shadow-inner">
+                                    <span class="text-[10px] font-bold text-slate-400 ml-1">mm</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <button type="button" onclick="setTolerance(0)" class="px-2.5 py-1.5 rounded-lg text-[10px] font-black bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-all active:scale-95">±0</button>
+                                    <button type="button" onclick="setTolerance(1)" class="px-2.5 py-1.5 rounded-lg text-[10px] font-black bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-all active:scale-95">±1</button>
+                                    <button type="button" onclick="setTolerance(2)" class="px-2.5 py-1.5 rounded-lg text-[10px] font-black bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-all active:scale-95">±2</button>
+                                    <button type="button" onclick="setTolerance(5)" class="px-2.5 py-1.5 rounded-lg text-[10px] font-black bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-white transition-all active:scale-95">±5</button>
+                                </div>
+                            </div>
+
+                            <!-- Clear Button -->
+                            <button type="button" onclick="clearMeasurementSearch()"
+                                class="p-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-rose-500 dark:hover:text-rose-400 transition-all text-xs font-bold flex items-center gap-1.5 active:scale-95">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                <span data-i18n="btn-clear-measure">Clear</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 8 Measurement Dimension Inputs Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">W (Width)</label>
+                            <input type="number" id="m-search-width" step="any" inputmode="decimal" placeholder="e.g. 120"
+                                class="m-dimension-input w-full p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-center text-xs font-bold outline-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">H (Height)</label>
+                            <input type="number" id="m-search-height" step="any" inputmode="decimal" placeholder="e.g. 150"
+                                class="m-dimension-input w-full p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-center text-xs font-bold outline-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">LH1</label>
+                            <input type="number" id="m-search-lh1" step="any" inputmode="decimal" placeholder="e.g. 140"
+                                class="m-dimension-input w-full p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-center text-xs font-bold outline-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">RH1</label>
+                            <input type="number" id="m-search-rh1" step="any" inputmode="decimal" placeholder="e.g. 140"
+                                class="m-dimension-input w-full p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-center text-xs font-bold outline-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">LH2</label>
+                            <input type="number" id="m-search-lh2" step="any" inputmode="decimal" placeholder="e.g. 30"
+                                class="m-dimension-input w-full p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-center text-xs font-bold outline-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">RH2</label>
+                            <input type="number" id="m-search-rh2" step="any" inputmode="decimal" placeholder="e.g. 30"
+                                class="m-dimension-input w-full p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-center text-xs font-bold outline-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">CH1 (Curve)</label>
+                            <input type="number" id="m-search-ch1" step="any" inputmode="decimal" placeholder="e.g. 15"
+                                class="m-dimension-input w-full p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-center text-xs font-bold outline-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">CH2 (Curve)</label>
+                            <input type="number" id="m-search-ch2" step="any" inputmode="decimal" placeholder="e.g. 15"
+                                class="m-dimension-input w-full p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-center text-xs font-bold outline-none focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all">
+                        </div>
+                    </div>
+
+                    <!-- Filter summary bar if active -->
+                    <div id="m-filter-summary" class="hidden mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2 text-primary dark:text-blue-400 font-bold">
+                            <i data-lucide="filter" class="w-3.5 h-3.5"></i>
+                            <span id="m-filter-summary-text">Active Filter</span>
                         </div>
                     </div>
                 </div>
@@ -337,56 +497,56 @@
                                         <label
                                             class="block text-[10px] font-bold text-slate-400 group-focus-within:text-primary uppercase tracking-widest mb-1 ml-1"
                                             data-i18n="label-width">Width</label>
-                                        <input type="text" id="pocketWidth" class="input-modern px-3 py-2 text-sm"
+                                        <input type="text" id="pocketWidth" inputmode="decimal" class="input-modern px-3 py-2 text-sm"
                                             placeholder="W (mm)">
                                     </div>
                                     <div class="form-group group">
                                         <label
                                             class="block text-[10px] font-bold text-slate-400 group-focus-within:text-primary uppercase tracking-widest mb-1 ml-1"
                                             data-i18n="label-height">Height</label>
-                                        <input type="text" id="pocketHeight" class="input-modern px-3 py-2 text-sm"
+                                        <input type="text" id="pocketHeight" inputmode="decimal" class="input-modern px-3 py-2 text-sm"
                                             placeholder="H (mm)">
                                     </div>
                                     <div class="form-group group">
                                         <label
                                             class="block text-[10px] font-bold text-slate-400 group-focus-within:text-primary uppercase tracking-widest mb-1 ml-1"
                                             data-i18n="label-lh1">Left H1</label>
-                                        <input type="text" id="pocketLH1" class="input-modern px-3 py-2 text-sm"
+                                        <input type="text" id="pocketLH1" inputmode="decimal" class="input-modern px-3 py-2 text-sm"
                                             placeholder="LH1 (mm)">
                                     </div>
                                     <div class="form-group group">
                                         <label
                                             class="block text-[10px] font-bold text-slate-400 group-focus-within:text-primary uppercase tracking-widest mb-1 ml-1"
                                             data-i18n="label-rh1">Right H1</label>
-                                        <input type="text" id="pocketRH1" class="input-modern px-3 py-2 text-sm"
+                                        <input type="text" id="pocketRH1" inputmode="decimal" class="input-modern px-3 py-2 text-sm"
                                             placeholder="RH1 (mm)">
                                     </div>
                                     <div class="form-group group">
                                         <label
                                             class="block text-[10px] font-bold text-slate-400 group-focus-within:text-primary uppercase tracking-widest mb-1 ml-1"
                                             data-i18n="label-lh2">Left H2</label>
-                                        <input type="text" id="pocketLH2" class="input-modern px-3 py-2 text-sm"
+                                        <input type="text" id="pocketLH2" inputmode="decimal" class="input-modern px-3 py-2 text-sm"
                                             placeholder="LH2 (mm)">
                                     </div>
                                     <div class="form-group group">
                                         <label
                                             class="block text-[10px] font-bold text-slate-400 group-focus-within:text-primary uppercase tracking-widest mb-1 ml-1"
                                             data-i18n="label-rh2">Right H2</label>
-                                        <input type="text" id="pocketRH2" class="input-modern px-3 py-2 text-sm"
+                                        <input type="text" id="pocketRH2" inputmode="decimal" class="input-modern px-3 py-2 text-sm"
                                             placeholder="RH2 (mm)">
                                     </div>
                                     <div class="form-group group id-curve-only hidden">
                                         <label
                                             class="block text-[10px] font-bold text-slate-400 group-focus-within:text-primary uppercase tracking-widest mb-1 ml-1"
                                             data-i18n="label-ch1">Curve H1</label>
-                                        <input type="text" id="pocketCH1" class="input-modern px-3 py-2 text-sm"
+                                        <input type="text" id="pocketCH1" inputmode="decimal" class="input-modern px-3 py-2 text-sm"
                                             placeholder="CH1 (mm)">
                                     </div>
                                     <div class="form-group group id-curve-only hidden">
                                         <label
                                             class="block text-[10px] font-bold text-slate-400 group-focus-within:text-primary uppercase tracking-widest mb-1 ml-1"
                                             data-i18n="label-ch2">Curve H2</label>
-                                        <input type="text" id="pocketCH2" class="input-modern px-3 py-2 text-sm"
+                                        <input type="text" id="pocketCH2" inputmode="decimal" class="input-modern px-3 py-2 text-sm"
                                             placeholder="CH2 (mm)">
                                     </div>
                                     <div class="form-group group col-span-2">
@@ -465,8 +625,8 @@
                                         <span
                                             class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors"><i
                                                 data-lucide="layers" class="w-4 h-4"></i></span>
-                                        <input type="number" id="quantity" class="input-modern pl-11"
-                                            placeholder="e.g. 10" min="1">
+                                        <input type="number" id="quantity" inputmode="numeric" class="input-modern pl-11"
+                                            placeholder="e.g. 10" min="1" value="1">
                                     </div>
                                 </div>
 
@@ -583,7 +743,7 @@
     <div id="jig-detail-modal" onclick="if(event.target === this) closeJigDetail()"
         class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md transition-all duration-300">
         <div
-            class="relative max-w-5xl w-full bg-white dark:bg-slate-900 rounded-[40px] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row max-h-[90vh]">
+            class="relative max-w-5xl w-full bg-white dark:bg-slate-900 rounded-[32px] md:rounded-[40px] overflow-y-auto md:overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row max-h-[92vh]">
             <button onclick="closeJigDetail()"
                 class="absolute top-4 right-4 p-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all text-slate-500 z-20 shadow-lg border border-slate-200 dark:border-slate-700">
                 <i data-lucide="x" class="w-5 h-5"></i>
@@ -743,12 +903,15 @@
     </div>
 
     <!-- Scripts -->
-    <script src="app.js"></script>
+    <script src="app.js?v=2.0"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(reg => console.log('SW Registered'))
+                navigator.serviceWorker.register('./service-worker.js?v=2.0')
+                    .then(reg => {
+                        reg.update();
+                        console.log('SW Registered');
+                    })
                     .catch(err => console.log('SW Failed', err));
             });
         }
